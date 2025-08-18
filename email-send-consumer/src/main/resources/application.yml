@@ -1,0 +1,10 @@
+server:
+  port: 0 # 사용가능한 랜덤 포트를 찾아서 실행합니다.
+
+spring:
+  kafka:
+    bootstrap-servers: 3.39.232.100:9092
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer # key의 역질렬화 방식
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer  # value의 역직렬화 방식
+      auto-offset-reset: earliest # consumer group이 미리 안만들어져 있다면 서버가 알아서 생성해 처음부터 읽어옵니다. 단, 이미 생성되어있다면 다음으로 읽어야할 메시지부터 읽어옵니다. --from-beginning과 유사합니다.
