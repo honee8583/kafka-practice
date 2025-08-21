@@ -1,10 +1,12 @@
 package com.farmdora.emailsendconsumer;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class EmailSendConsumer {
 
@@ -13,7 +15,8 @@ public class EmailSendConsumer {
     // consumer group을 사용하기 때문에 메시지를 어디까지 읽었는지에 대한 offset값을 같이 저장해줍니다.
     @KafkaListener(
             topics = "email.send",
-            groupId = "email-send-group"
+            groupId = "email-send-group",
+            concurrency = "3"  // 스프링부트의 멀테쓰레드를 사용해서 병렬적으로 처리할 파티션의 개수를 설정합니다.
     )
     // 현업에서는 보통 재시도 횟수는 3~5 사이로 정합니다.
     // 재시도를 너무 많이 할 경우 시스템 부하가 커질 수 있습니다.
@@ -23,13 +26,13 @@ public class EmailSendConsumer {
             dltTopicSuffix = ".dlt" // 지정하지 않을 경우 -dlt 형식으로 생깁니다.
     )
     public void consume(String message) { // 읽은 메시지는 파라미터로 들어옵니다.
-        System.out.println("Kafka로부터 받아온 메시지: " + message);
+        log.info("Kafka로부터 받아온 메시지: {}", message);
 
         EmailSendMessage emailSendMessage = EmailSendMessage.fromJson(message);
 
         if(emailSendMessage.getTo().equals("fail@naver.com")) {
             String errorMessage = "잘못된 이메일 주소로 인해 발송 실패";
-            System.out.println(errorMessage);
+            log.info(errorMessage);
             throw new RuntimeException(errorMessage);
         }
 
@@ -40,6 +43,6 @@ public class EmailSendConsumer {
             throw new RuntimeException("이메일 발송 실패");
         }
 
-        System.out.println("이메일 발송 완료");
+        log.info("이메일 발송 완료");
     }
 }
